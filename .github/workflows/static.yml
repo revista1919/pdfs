@@ -1,9 +1,8 @@
-name: Deploy PDFs to Pages
+name: Deploy PDFs with Debug
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 permissions:
   contents: read
@@ -15,16 +14,43 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v4
+
+      - name: Show current directory
+        run: pwd
+
+      - name: List full repo structure
+        run: |
+          echo "===== FILE TREE ====="
+          ls -R
+
+      - name: Generate test index.html
+        run: |
+          echo "<!DOCTYPE html>" > index.html
+          echo "<html><body>" >> index.html
+          echo "<h1>PDF Repository Test</h1>" >> index.html
+          echo "<p>If you see this, Pages works.</p>" >> index.html
+          echo "<h2>PDF files found:</h2><ul>" >> index.html
+
+          find . -name "*.pdf" | sed 's|^\./||' | while read file; do
+            echo "<li><a href=\"$file\">$file</a></li>" >> index.html
+          done
+
+          echo "</ul></body></html>" >> index.html
+
+      - name: Show generated index
+        run: |
+          echo "===== INDEX.HTML ====="
+          cat index.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload site
+      - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: .
 
-      - name: Deploy
+      - name: Deploy to Pages
         uses: actions/deploy-pages@v4
