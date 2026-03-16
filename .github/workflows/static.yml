@@ -2,7 +2,7 @@ name: Deploy PDFs with Full Debug
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
 
 permissions:
   contents: read
@@ -14,52 +14,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout repository (with LFS)
         uses: actions/checkout@v4
         with:
           lfs: true
           fetch-depth: 0
 
-      - name: Pull LFS objects
-        run: git lfs pull
-
-      - name: Show working directory
-        run: pwd
-
-      - name: Print full repository tree
+      - name: Ensure LFS installed
         run: |
-          echo "===== REPOSITORY TREE ====="
+          git lfs install
+
+      - name: Pull LFS objects
+        run: |
+          git lfs pull
+          git lfs checkout
+
+      - name: Show repository tree
+        run: |
+          echo "===== TREE ====="
           ls -R
 
-      - name: Inspect PDF files
+      - name: Show PDF sizes
         run: |
           echo "===== PDF FILES ====="
           find . -name "*.pdf" -exec ls -lh {} \;
 
-      - name: Generate test index.html
+      - name: Generate index.html
         run: |
           echo "<!DOCTYPE html>" > index.html
           echo "<html><body>" >> index.html
           echo "<h1>PDF Repository Test</h1>" >> index.html
-          echo "<p>If you see this, Pages works.</p>" >> index.html
-          echo "<h2>PDF files found:</h2><ul>" >> index.html
-
+          echo "<ul>" >> index.html
           find . -name "*.pdf" | sed 's|^\./||' | while read file; do
             echo "<li><a href=\"$file\">$file</a></li>" >> index.html
           done
-
           echo "</ul></body></html>" >> index.html
-
-      - name: Show generated index
-        run: |
-          echo "===== INDEX.HTML ====="
-          cat index.html
-
-      - name: Show files to deploy
-        run: |
-          echo "===== FILES THAT WILL BE DEPLOYED ====="
-          find . -type f
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -69,5 +58,5 @@ jobs:
         with:
           path: .
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy
         uses: actions/deploy-pages@v4
